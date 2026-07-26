@@ -1,0 +1,45 @@
+# Virtual environment
+.venv/
+venv/
+env/
+*.env
+.env*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# Airflow logs
+airflow/logs/*
+!airflow/logs/.gitkeep
+
+# Data directories (keep empty folders via .gitkeep, ignore data files)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/archive/*
+!data/archive/.gitkeep
+data/quarantine/*
+!data/quarantine/.gitkeep
+
+# Reference instructions & temporary files from initial workspace
+AI_PAIRING_INSTRUCTIONS.md
+POST_CLONE_STEPS.md
+README (1).md
+Retail_Analytics_Platform_Architecture (1).docx
+Retail_Analytics_Platform_Architecture.docx.md
+architecture (1).md
+
+# Temporary clone repository (to be deleted after migration)
+altschool_final_project/

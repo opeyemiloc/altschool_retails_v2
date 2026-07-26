@@ -1,0 +1,5 @@
+# Docker Compose configuration skeleton
+# Will be populated with Airflow, PostgreSQL, Redis, and shared volumes definitions.
+version: '3.8'
+
+services: {}
