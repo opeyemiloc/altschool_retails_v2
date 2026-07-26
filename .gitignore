@@ -36,10 +36,14 @@ data/quarantine/*
 # Reference instructions & temporary files from initial workspace
 AI_PAIRING_INSTRUCTIONS.md
 POST_CLONE_STEPS.md
-README (1).md
+testREADME (1).md
 Retail_Analytics_Platform_Architecture (1).docx
 Retail_Analytics_Platform_Architecture.docx.md
 architecture (1).md
 
 # Temporary clone repository (to be deleted after migration)
 altschool_final_project/
+
+# Jupyter Notebooks & experimental test files
+*.ipynb
+kaggle_api_data_test.ipynb
