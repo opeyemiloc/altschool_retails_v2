@@ -41,15 +41,15 @@ Power BI (Reporting & Dashboards)
 
 ## Technology Stack
 
-| Layer | Technology | Description |
-|---|---|---|
-| **Orchestration** | Apache Airflow | Workflows, DAG scheduling, and task dependencies |
-| **Infrastructure** | Docker Compose | Containerized Airflow, PostgreSQL, and Redis |
-| **Business Logic** | Python (`retail_platform`) | Package handling ingestion, validation, and warehouse loading |
-| **Operational DB** | PostgreSQL | Landing/staging store for raw validated operational data |
-| **Data Warehouse** | Google BigQuery | Scalable cloud data warehouse |
-| **Transformations** | dbt Core (`dbt-bigquery`) | Staging, intermediate, and dimensional modeling (marts) |
-| **Analytics & BI** | Power BI | Executive & operational dashboards |
+| Layer                     | Technology                   | Description                                                   |
+| ------------------------- | ---------------------------- | ------------------------------------------------------------- |
+| **Orchestration**   | Apache Airflow               | Workflows, DAG scheduling, and task dependencies              |
+| **Infrastructure**  | Docker Compose               | Containerized Airflow, PostgreSQL, and Redis                  |
+| **Business Logic**  | Python (`retail_platform`) | Package handling ingestion, validation, and warehouse loading |
+| **Operational DB**  | PostgreSQL                   | Landing/staging store for raw validated operational data      |
+| **Data Warehouse**  | Google BigQuery              | Scalable cloud data warehouse                                 |
+| **Transformations** | dbt Core (`dbt-bigquery`)  | Staging, intermediate, and dimensional modeling (marts)       |
+| **Analytics & BI**  | Power BI                     | Executive & operational dashboards                            |
 
 ---
 
@@ -113,10 +113,6 @@ docker compose up -d
 ---
 
 ## Documentation
-
-* [Architecture Overview](architecture%20(1).md)
-* [Post-Clone Setup Steps](POST_CLONE_STEPS.md)
-* [AI Pairing Guidelines](AI_PAIRING_INSTRUCTIONS.md)
 
 ---
 
