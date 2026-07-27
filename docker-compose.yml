@@ -22,13 +22,15 @@ x-airflow-common:
     POSTGRES_PORT: '5432'
     GCP_PROJECT_ID: ${GCP_PROJECT_ID:-}
     BIGQUERY_DATASET: ${BIGQUERY_DATASET:-}
-    GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
+    GOOGLE_APPLICATION_CREDENTIALS: /opt/airflow/gcp_keys/altschool-retails-v2-5b1defe15394.json
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/airflow/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/airflow/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/airflow/plugins:/opt/airflow/plugins
     - ${AIRFLOW_PROJ_DIR:-.}/src:/opt/airflow/src
     - ${AIRFLOW_PROJ_DIR:-.}/data:/opt/airflow/data
+    - C:/Users/User/.gcp:/opt/airflow/gcp_keys:ro
+
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on

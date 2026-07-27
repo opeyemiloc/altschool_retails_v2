@@ -112,7 +112,26 @@ docker compose up -d
 
 ---
 
-## Documentation
+## 📚 Modular Architecture & Subsystem Guides
+
+To keep documentation focused, maintainable, and structured for engineering publications, detailed technical specifications, architecture diagrams, and troubleshooting guides are maintained in specialized submodule READMEs:
+
+| Subsystem / Layer | Path | Description |
+| :--- | :--- | :--- |
+| **Orchestration & Docker** | [`airflow/README.md`](file:///C:/Users/User/Desktop/altschool_retails_v2/airflow/README.md) | DAG scheduling, Pre-Flight check pattern, container volume syncing, and Windows/Linux auth mounts. |
+| **Raw Data Ingestion** | [`src/retail_platform/ingestion/README.md`](file:///C:/Users/User/Desktop/altschool_retails_v2/src/retail_platform/ingestion/README.md) | Kaggle API automation, ZIP decompression, schema validation, and staging workflows. |
+| **Medallion Bronze Layer** | [`src/retail_platform/warehouse/README.md`](file:///C:/Users/User/Desktop/altschool_retails_v2/src/retail_platform/warehouse/README.md) | OLTP Postgres chunked streaming, ACID rollbacks, BigQuery ADC handshakes, and scaling idempotency. |
+| **Comprehensive Guide & Interview Scenarios** | [`Learn.md`](file:///C:/Users/User/Desktop/altschool_retails_v2/Learn.md) | Senior data engineering theory, architecture defenses, and 12 real-world interview Q&A scenarios. |
+
+---
+
+## ✍️ Engineering Case Studies & Publications
+
+*This section captures real-world engineering challenges, architectural trade-offs, and debug breakthroughs encountered while building this platform—structured for technical blog posts and Medium articles:*
+
+* 📝 **Article 1**: *The Docker vs. Local Trap: Building Resilient Airflow DAGs Across Windows and Linux Containers* (See [`airflow/README.md`](file:///C:/Users/User/Desktop/altschool_retails_v2/airflow/README.md))
+* 📝 **Article 2**: *Building Resilient Data Warehouse Loaders: Why Your Pipeline Needs Defense-in-Depth and ACID Rollbacks* (See [`src/retail_platform/warehouse/README.md`](file:///C:/Users/User/Desktop/altschool_retails_v2/src/retail_platform/warehouse/README.md))
+* 📝 **Article 3**: *Scaling Idempotency in Google BigQuery: Moving Beyond Table Truncation to SQL MERGE and Partition Overwrites* (See [`Learn.md`](file:///C:/Users/User/Desktop/altschool_retails_v2/Learn.md))
 
 ---
 
