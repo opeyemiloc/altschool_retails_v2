@@ -11,7 +11,9 @@
 3. [Module 3: Python Packaging, Imports & Environment Internals](#module-3-python-packaging-imports--environment-internals)
 4. [Module 4: API Engineering, Ingestion & Memory Management](#module-4-api-engineering-ingestion--memory-management)
 5. [Module 5: Database Theory, ACID & Data Quality Mechanics](#module-5-database-theory-acid--data-quality-mechanics)
-6. [Cellular-Level Defense & Interview Scenarios](#cellular-level-defense--interview-scenarios)
+6. [Module 6: Distributed Orchestration & Task Queue Mechanics](#module-6-distributed-orchestration--task-queue-mechanics)
+7. [Module 7: Database Ingestion Mechanics — Transactional Atomicity vs. Idempotency](#module-7-database-ingestion-mechanics--transactional-atomicity-vs-idempotency)
+8. [Cellular-Level Defense & Interview Scenarios](#cellular-level-defense--interview-scenarios)
 
 ---
 
@@ -282,6 +284,64 @@ Before raw ingested data is committed to PostgreSQL, data quality validation rul
 
 ---
 
+## Module 6: Distributed Orchestration & Task Queue Mechanics
+
+### 6.1 Airflow Executors: LocalExecutor vs. CeleryExecutor
+
+When orchestrating data pipelines with Apache Airflow, the **Executor** determines *where* and *how* tasks are run:
+
+1. **LocalExecutor (Single-Node Execution)**:
+   * **Mechanism**: Runs task instances inside local sub-processes on the exact same machine or container as the Airflow Scheduler.
+   * **When to use**: Ideal for local development environments, tutorials, or lightweight data pipelines.
+   * **Broker Requirement**: Because the scheduler and task execution happen on the same filesystem/OS instance, **no external message broker or task queue is required**. This is why simple local clones do not need Redis.
+
+2. **CeleryExecutor (Distributed Multi-Node Execution)**:
+   * **Mechanism**: Separates task scheduling from task execution. The central Scheduler pushes task execution commands to a queue, and independent `airflow-worker` nodes pull from the queue to execute tasks in parallel across multiple machines/containers.
+   * **When to use**: Essential for enterprise production platforms handling heavy concurrent ETL/ingestion workflows where a single machine would suffer CPU/memory exhaustion.
+   * **Broker Requirement**: Requires a **Message Broker** (such as Redis or RabbitMQ) to manage communication and distribute task queues between the Scheduler and distributed Workers.
+
+### 6.2 The Role of Redis as an In-Memory Message Broker
+
+In an enterprise analytics platform, Redis serves several vital engineering functions:
+
+* **Distributed Task Queue (Celery Broker)**: Redis acts as an ultra-fast, in-memory data store where Airflow schedules pending task commands. Workers poll Redis, claim tasks, and execute them independently without overloading the primary orchestration node.
+* **High-Speed Caching & Rate Limiting**: Storing ephemeral API authentication tokens, session identifiers, and rate-limit counters in memory to prevent exceeding quota limitations on external data providers (e.g., Kaggle API).
+* **Real-Time Data Enrichment**: Hosting fast key-value lookup tables (such as customer IDs, segment mappings, or dynamic exchange rates) to enrich streaming or chunked ingestion payloads before writing to disk or relational databases.
+* **Distributed Locking**: Ensuring idempotency across distributed worker clusters by setting atomic locks (e.g., `SETNX`), guaranteeing that two parallel workers never attempt to download or process the identical source file simultaneously.
+
+### 6.3 Architecture Upgrade Project: Scaling to Distributed Workers
+
+A valuable hands-on data engineering exercise is migrating a single-node pipeline to a distributed architecture:
+1. **Analyze Current State**: In `docker-compose.yml`, our platform currently configures `AIRFLOW__CORE__EXECUTOR: LocalExecutor` without independent worker containers or a Redis instance.
+2. **The Refactor Plan**:
+   * Add a `redis:latest` service to `docker-compose.yml` with health checks and volume persistence.
+   * Update Airflow common environment variables to use `AIRFLOW__CORE__EXECUTOR: CeleryExecutor` and point `AIRFLOW__CELERY__BROKER_URL` to `redis://redis:6379/0`.
+   * Provision one or more `airflow-worker` service containers that depend on Redis and PostgreSQL.
+3. **Observation**: Trigger concurrent DAG runs to observe how task execution messages get pushed to Redis and picked up asynchronously by parallel worker nodes.
+
+---
+
+## Module 7: Database Ingestion Mechanics — Transactional Atomicity vs. Idempotency
+
+### 7.1 The Auto-Commit per Chunk Problem
+When loading large files (e.g., 100,000 rows) into a relational database using stream processing (`chunksize=10000`), executing each chunk independently causes the database to commit data chunk-by-chunk. If an unexpected interruption occurs (e.g., network failure, process killed via Ctrl+C, or schema validation error at Chunk 5), Chunks 1 through 4 remain permanently written to disk. This leaves the database table in a corrupted, half-filled state with partial data.
+
+### 7.2 Idempotency (Pre-Load Truncation)
+**Idempotency** is a core reliability principle ensuring that an operation can be executed multiple times without changing the result beyond the initial application. In data ingestion, idempotency is commonly implemented via **Pre-Load Truncation**: executing `TRUNCATE TABLE {schema}.{table} CASCADE;` prior to loading. While this ensures a fresh re-run will cleanly replace any broken or partial data from a previous failed run, it does not prevent the database from sitting in a partially populated state between the failure and the subsequent re-run.
+
+### 7.3 Transactional Atomicity (All-or-Nothing Rollback)
+To guarantee that a database table never enters a partially loaded state, data platforms implement **Transactional Atomicity** (the 'A' in ACID). By wrapping the entire multi-chunk streaming loop for a table inside an explicit database transaction block (`with engine.begin() as tx_conn:`):
+- All streamed chunks are written to the database engine's temporary transaction buffer (MVCC / Write-Ahead Log) without committing.
+- If all chunks process successfully, the engine executes a single atomic `COMMIT`.
+- If an exception or interruption occurs at any point during the streaming loop, the engine automatically issues an immediate `ROLLBACK`. Zero partial rows are committed to disk, leaving the table in its pristine pre-ingestion state.
+
+### 7.4 Defense-in-Depth: The Gold Standard
+Enterprise data pipelines combine **both** techniques:
+1. **Pre-Load Truncation (Idempotency)**: Guarantees clean, duplicate-free replacement when a scheduled pipeline runs.
+2. **Atomic Transactions (Atomicity)**: Protects operational databases from partial data corruption if an ingestion job fails or is interrupted mid-stream.
+
+---
+
 ## Cellular-Level Defense & Interview Scenarios
 
 ### Scenario 1: "What happens when you run `docker compose up`?"
@@ -298,3 +358,9 @@ Before raw ingested data is committed to PostgreSQL, data quality validation rul
 
 ### Scenario 5: "Why should Python scripts include `if __name__ == '__main__':`?"
 > **Answer**: When Python executes a script directly, it sets `__name__ = "__main__"`. When imported as a module by another script, notebook, or test runner like `pytest`, `__name__` is set to the file's module name. Wrapping execution code in `if __name__ == '__main__':` creates a safety guard that prevents code side-effects (such as triggering data pipelines or DB writes) from running automatically upon import.
+
+### Scenario 6: "Why would an enterprise analytics platform use Redis alongside Airflow, and when is a single-node setup sufficient?"
+> **Answer**: In simpler development environments or lightweight pipelines, Airflow runs on a single node using `LocalExecutor` or `SequentialExecutor`, where tasks execute in local sub-processes without a message broker. However, in production enterprise platforms handling hundreds of concurrent ETL/ingestion workflows, single-node execution causes CPU/memory bottlenecks. Enterprise architectures scale horizontally using `CeleryExecutor` (or KubernetesExecutor), where Airflow separates the central Scheduler from distributed Worker nodes. **Redis** acts as an ultra-fast, in-memory message broker (task queue) that stores task execution commands from the Scheduler for workers to pick up and execute in parallel. Additionally, Redis is used in data platforms for high-speed API token caching, real-time data enrichment lookups, and distributed locking.
+
+### Scenario 7: "How do you handle interruptions during chunked database ingestion to prevent partial data loading?"
+> **Answer**: By default, streaming data in chunks can result in partial data loads if a process is interrupted after several chunks have already committed. To prevent this, enterprise ingestion pipelines implement **Defense-in-Depth** by combining **Idempotency** and **Transactional Atomicity**. First, we execute a pre-load table truncation (`TRUNCATE TABLE ... CASCADE;`) to guarantee idempotent re-runs. Second, we wrap the entire multi-chunk streaming loop inside a single explicit ACID transaction block (`with engine.begin() as tx_conn:`). If any chunk fails or the process is interrupted mid-stream, the database engine automatically issues a `ROLLBACK`, reverting the table to its exact pre-ingestion state and guaranteeing zero partial data corruption.
