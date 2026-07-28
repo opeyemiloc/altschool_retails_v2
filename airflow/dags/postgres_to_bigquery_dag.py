@@ -102,7 +102,7 @@ with DAG(
     )
 
     # Chain pre-flight checks: connection must succeed before dataset verification
-    verify_connection_task >> ensure_dataset_task
+    verify_connection_task >> ensure_dataset_task # type: ignore
 
     # 4. Fan-out into parallel table extraction and loading tasks
     for csv_filename in LOADING_ORDER:
@@ -117,4 +117,4 @@ with DAG(
         )
 
         # Wire fan-out: each table load depends on dataset check, and converges to complete
-        ensure_dataset_task >> load_table_task >> pipeline_complete_task
+        ensure_dataset_task >> load_table_task >> pipeline_complete_task # type: ignore

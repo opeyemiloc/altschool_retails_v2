@@ -3,6 +3,8 @@ version: '3.8'
 x-airflow-common:
   &airflow-common
   image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.9.3}
+  env_file:
+    - .env
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -22,7 +24,11 @@ x-airflow-common:
     POSTGRES_PORT: '5432'
     GCP_PROJECT_ID: ${GCP_PROJECT_ID:-}
     BIGQUERY_DATASET: ${BIGQUERY_DATASET:-}
+    KAGGLE_USERNAME: ${KAGGLE_USERNAME:-}
+    KAGGLE_KEY: ${KAGGLE_KEY:-}
+    KAGGLE_DATASET: ${KAGGLE_DATASET:-olistbr/brazilian-ecommerce}
     GOOGLE_APPLICATION_CREDENTIALS: /opt/airflow/gcp_keys/altschool-retails-v2-5b1defe15394.json
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-kagglehub dbt-bigquery pydantic-settings}
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/airflow/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/airflow/logs:/opt/airflow/logs
@@ -143,6 +149,7 @@ services:
         exec /entrypoint airflow version
     environment:
       <<: *airflow-common-env
+      _PIP_ADDITIONAL_REQUIREMENTS: ''
       _AIRFLOW_DB_MIGRATE: 'true'
       _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-admin}

@@ -53,6 +53,13 @@ class Settings:
             "port": self.POSTGRES_PORT
         }
 
+    def get_postgres_url(self) -> str:
+        """Returns SQLAlchemy connection URL string."""
+        return (
+            f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
+
 # Singleton instance
 _settings = None
 
