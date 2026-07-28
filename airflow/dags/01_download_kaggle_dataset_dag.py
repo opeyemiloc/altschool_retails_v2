@@ -89,4 +89,4 @@ with DAG(
     )
 
     # Architectural Graph Dependency
-    verify_credentials_task >> download_dataset_task
+    verify_credentials_task >> download_dataset_task # type: ignore
