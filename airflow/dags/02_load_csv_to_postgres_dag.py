@@ -115,7 +115,7 @@ with DAG(
     )
 
     # Pre-flight readiness gate sequence
-    verify_db_task >> verify_files_task
+    verify_db_task >> verify_files_task # type: ignore
 
     # Fan out parallel worker tasks for each table in reference hierarchy order
     for csv_file in LOADING_ORDER:
@@ -130,4 +130,4 @@ with DAG(
         )
         
         # Link pre-flight gate to each worker task
-        verify_files_task >> load_task
+        verify_files_task >> load_task # type: ignore

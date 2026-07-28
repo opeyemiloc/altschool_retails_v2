@@ -121,8 +121,8 @@ class BigQueryLoader:
             
         total_rows = len(df)
         if total_rows == 0:
-            logger.warning(f"Table {self.schema}.{table_name.upper()} is empty in PostgreSQL. Skipping BQ load.")
-            return 0
+            logger.warning(f"Table {self.schema}.{table_name.upper()} is empty in PostgreSQL. Proceeding with empty load to maintain BigQuery idempotency.")
+
 
         # 2. Transform/Clean timestamps and object types for BigQuery schema compatibility
         for col in df.columns:
